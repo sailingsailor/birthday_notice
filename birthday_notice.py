@@ -10,7 +10,7 @@ file_path = r'./birthday.xlsx'
 df = pd.read_excel(file_path, sheet_name="Sheet1")
 
 # Bark API endpoint
-api_endpoint = 'https://api.day.app/Nrx6aPXHWUVnELv8cJ4qCj/'
+api_endpoint = 'https://api.day.app/xxxxxxx/'
 
 current_time = datetime.date.today()
 current_year = datetime.date.today().year
