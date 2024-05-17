@@ -10,7 +10,7 @@ file_path = r'./birthday.xlsx'
 df = pd.read_excel(file_path, sheet_name="Sheet1")
 
 # Bark API endpoint
-api_endpoint = 'https://api.day.app/xxxxxxx/'
+api_endpoint = 'https://api.day.app/xxxxxxxxxx/'
 
 current_time = datetime.date.today()
 current_year = datetime.date.today().year
@@ -49,7 +49,10 @@ def main():
                 continue
             elif flag <= 3:
                 title = f'今日{current_time}\n{lunar_date}'
-                desp = "{}{}({}天后)过{}岁生日,阴历{}".format(name, result.strftime('%Y-%m-%d'), flag, how_old,lunarbirth)
+                if flag == 0:
+                    desp = "{}今天过{}岁生日,阴历{}".format(name, how_old,lunarbirth.strftime('%m月%d日'))
+                else:
+                    desp = "{}{}({}天后)过{}岁生日,阴历{}".format(name, result.strftime('%Y-%m-%d'), flag, how_old,lunarbirth.strftime('%Y-%m-%d'))
                 # Send POST request to the API endpoint with the notification text
                 data = {'title': title, 'body': desp}
                 response = requests.post(api_endpoint, data=data)
