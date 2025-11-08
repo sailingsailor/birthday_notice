@@ -3,7 +3,10 @@ birthday_notice农历、阳历生日提醒
 
 # 提醒
 1. 用的Bark提醒，自行修改bark api，需安装APP，在APP Store搜索：bark
-2. 安卓可改用ntfy,自行修改api
+   # Bark API endpoint
+    api_endpoint = 'https://api.day.app/xxxxxxxxxx/'
+3. 安卓可改用ntfy,自行修改api
+   https://ntfy.sh/xxxxxx
 
 
 # 使用方法
