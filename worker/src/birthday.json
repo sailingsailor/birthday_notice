@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-30",
+  "updatedAt": "2026-09-03",
   "source": "birthday.xlsx",
   "people": [
     {
@@ -307,7 +307,7 @@
       }
     },
     {
-      "name": "舅妈",
+      "name": "舅妈董广琴",
       "type": "阴历",
       "solar": {
         "year": 1969,
@@ -377,20 +377,6 @@
       }
     },
     {
-      "name": "格格",
-      "type": "阴历",
-      "solar": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "lunar": {
-        "year": 2009,
-        "month": 6,
-        "day": 18
-      }
-    },
-    {
       "name": "恩恩何沐恩",
       "type": "阴历",
       "solar": {
@@ -405,34 +391,6 @@
       }
     },
     {
-      "name": "李思思",
-      "type": "阴历",
-      "solar": {
-        "year": 2026,
-        "month": 2,
-        "day": 25
-      },
-      "lunar": {
-        "year": 1989,
-        "month": 1,
-        "day": 9
-      }
-    },
-    {
-      "name": "城城",
-      "type": "阴历",
-      "solar": {
-        "year": 2016,
-        "month": 12,
-        "day": 7
-      },
-      "lunar": {
-        "year": 2016,
-        "month": 12,
-        "day": 7
-      }
-    },
-    {
       "name": "陈晓宇",
       "type": "阴历",
       "solar": {
@@ -444,6 +402,48 @@
         "year": 1987,
         "month": 7,
         "day": 21
+      }
+    },
+    {
+      "name": "城城陈依城",
+      "type": "阴历",
+      "solar": {
+        "year": 2016,
+        "month": 12,
+        "day": 7
+      },
+      "lunar": {
+        "year": 2016,
+        "month": 12,
+        "day": 7
+      }
+    },
+    {
+      "name": "格格陈依格",
+      "type": "阴历",
+      "solar": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "lunar": {
+        "year": 2009,
+        "month": 6,
+        "day": 18
+      }
+    },
+    {
+      "name": "李思思",
+      "type": "阴历",
+      "solar": {
+        "year": 2026,
+        "month": 2,
+        "day": 25
+      },
+      "lunar": {
+        "year": 1989,
+        "month": 1,
+        "day": 9
       }
     },
     {
