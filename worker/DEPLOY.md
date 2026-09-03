@@ -80,7 +80,25 @@ Worker 提供 iCalendar 订阅源，可添加到手机/电脑日历 App。设计
 - 改 xlsx 后：`python xlsx_to_json.py` → `wrangler kv key put --binding=BIRTHDAY birthday.json "$(cat src/birthday.json)"`，**次日 00:00 自动重新生成日历**生效。若想立刻生效，也可手动 `wrangler kv key put --binding=BIRTHDAY calendar.ics "$(本地生成的ics)"` 或等待首次拉取兜底生成。
 - ⚠️ Bark 每日提前推送目前仍保留（`scheduled` 里 `checkBirthdays` 调用）；若只想保留日历，删掉该调用即可。
 
-## 5. 本地调试（不部署）
+## 6. 本地调试（不部署）
 ```bash
 wrangler dev        # 本地起服务，访问 http://127.0.0.1:8787 触发检查
 ```
+
+## 7. 自动部署（GitHub Actions）
+仓库已包含 `.github/workflows/deploy.yml`：push 到 `main` 且 `worker/**` 或 workflow 自身变动时，自动 `npm ci` + `npx wrangler deploy`（在 `worker/` 目录内执行）。
+
+### 首次只需做一次：配置仓库 Secrets
+仓库页面 → **Settings → Secrets and variables → Actions → New repository secret**，添加：
+- **`CLOUDFLARE_API_TOKEN`**：Cloudflare API Token（权限需 `Workers Scripts(Edit)` + `Workers KV Storage(Edit)`）。
+  取你本地已有的同一个 token：Cloudflare 后台 `My Profile → API Tokens`；或本机 Windows 环境变量 `CLOUDFLARE_API_TOKEN` 的值。
+- **`CLOUDFLARE_ACCOUNT_ID`**（可选但建议）：账号 ID `6b26e121057fd094c5e176f5070b2338`。当 token 无 memberships 权限时必须提供，否则 deploy 报 `/memberships` 错误。
+
+### 之后
+- 改 `worker/` 代码 → push 到 `main` → 自动部署，几秒到一两分钟完成。
+- 也可在 **Actions** 页面手动 **Run workflow** 立即触发（workflow 已开启 `workflow_dispatch`）。
+
+### 注意
+- 首次 push 时 secret 尚未配置，workflow 会失败；配好 secret 后重跑（或下次 push）即成功。
+- Worker 上的密钥 `BARK_KEY`、`CAL_TOKEN` 已通过 `wrangler secret put` 存于 Cloudflare，**自动部署只更新代码，不会清除这些 secret**。
+- 数据更新走 `update.ps1` → KV，不触发部署；只有 `worker/` 代码改动才触发部署。
