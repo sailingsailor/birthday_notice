@@ -34,4 +34,5 @@ jobs:
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # 账号 ID 非机密，直接写死以减少配置项（token 无 memberships 权限时必须）
+          CLOUDFLARE_ACCOUNT_ID: "6b26e121057fd094c5e176f5070b2338"
