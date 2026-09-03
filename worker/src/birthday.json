@@ -1,0 +1,456 @@
+{
+  "updatedAt": "2026-08-30",
+  "source": "birthday.xlsx",
+  "people": [
+    {
+      "name": "邹世海",
+      "type": "阳历",
+      "solar": {
+        "year": 1982,
+        "month": 1,
+        "day": 22
+      },
+      "lunar": {
+        "year": 1981,
+        "month": 12,
+        "day": 28
+      }
+    },
+    {
+      "name": "上官妮",
+      "type": "阳历",
+      "solar": {
+        "year": 1988,
+        "month": 12,
+        "day": 17
+      },
+      "lunar": {
+        "year": 1988,
+        "month": 11,
+        "day": 9
+      }
+    },
+    {
+      "name": "邹辰希",
+      "type": "阳历",
+      "solar": {
+        "year": 2017,
+        "month": 9,
+        "day": 22
+      },
+      "lunar": {
+        "year": 2017,
+        "month": 8,
+        "day": 3
+      }
+    },
+    {
+      "name": "邹长洪",
+      "type": "阴历",
+      "solar": {
+        "year": 1955,
+        "month": 10,
+        "day": 9
+      },
+      "lunar": {
+        "year": 1955,
+        "month": 8,
+        "day": 24
+      }
+    },
+    {
+      "name": "姜昌珍",
+      "type": "阴历",
+      "solar": {
+        "year": 1957,
+        "month": 12,
+        "day": 1
+      },
+      "lunar": {
+        "year": 1957,
+        "month": 10,
+        "day": 10
+      }
+    },
+    {
+      "name": "上官习耀",
+      "type": "阴历",
+      "solar": {
+        "year": 1962,
+        "month": 11,
+        "day": 14
+      },
+      "lunar": {
+        "year": 1962,
+        "month": 10,
+        "day": 18
+      }
+    },
+    {
+      "name": "张安梅",
+      "type": "阴历",
+      "solar": {
+        "year": 1963,
+        "month": 4,
+        "day": 27
+      },
+      "lunar": {
+        "year": 1963,
+        "month": 4,
+        "day": 24
+      }
+    },
+    {
+      "name": "大姨爹江光元",
+      "type": "阴历",
+      "solar": {
+        "year": 1953,
+        "month": 11,
+        "day": 12
+      },
+      "lunar": {
+        "year": 1953,
+        "month": 10,
+        "day": 6
+      }
+    },
+    {
+      "name": "姨妈姜昌风",
+      "type": "阴历",
+      "solar": {
+        "year": 1955,
+        "month": 2,
+        "day": 2
+      },
+      "lunar": {
+        "year": 1955,
+        "month": 2,
+        "day": 2
+      }
+    },
+    {
+      "name": "江文",
+      "type": "阴历",
+      "solar": {
+        "year": 1982,
+        "month": 5,
+        "day": 15
+      },
+      "lunar": {
+        "year": 1982,
+        "month": 4,
+        "day": 22
+      }
+    },
+    {
+      "name": "张景",
+      "type": "阴历",
+      "solar": {
+        "year": 1985,
+        "month": 11,
+        "day": 23
+      },
+      "lunar": {
+        "year": 1985,
+        "month": 10,
+        "day": 12
+      }
+    },
+    {
+      "name": "江晨睿",
+      "type": "阳历",
+      "solar": {
+        "year": 2011,
+        "month": 10,
+        "day": 21
+      },
+      "lunar": {
+        "year": 2011,
+        "month": 9,
+        "day": 26
+      }
+    },
+    {
+      "name": "王创",
+      "type": "阴历",
+      "solar": {
+        "year": 1985,
+        "month": 9,
+        "day": 14
+      },
+      "lunar": {
+        "year": 1985,
+        "month": 7,
+        "day": 30
+      }
+    },
+    {
+      "name": "何静",
+      "type": "阴历",
+      "solar": {
+        "year": 1990,
+        "month": 8,
+        "day": 6
+      },
+      "lunar": {
+        "year": 1990,
+        "month": 6,
+        "day": 17
+      }
+    },
+    {
+      "name": "王月涵",
+      "type": "阴历",
+      "solar": {
+        "year": 2011,
+        "month": 2,
+        "day": 20
+      },
+      "lunar": {
+        "year": 2011,
+        "month": 1,
+        "day": 18
+      }
+    },
+    {
+      "name": "乐子王玥博",
+      "type": "阳历",
+      "solar": {
+        "year": 2019,
+        "month": 6,
+        "day": 19
+      },
+      "lunar": null
+    },
+    {
+      "name": "幺姨爹曾祥恩",
+      "type": "阴历",
+      "solar": {
+        "year": 1969,
+        "month": 5,
+        "day": 27
+      },
+      "lunar": {
+        "year": 1969,
+        "month": 4,
+        "day": 20
+      }
+    },
+    {
+      "name": "幺姨姜昌英",
+      "type": "阴历",
+      "solar": {
+        "year": 1973,
+        "month": 5,
+        "day": 10
+      },
+      "lunar": {
+        "year": 1973,
+        "month": 4,
+        "day": 8
+      }
+    },
+    {
+      "name": "曾晓桥",
+      "type": "阴历",
+      "solar": {
+        "year": 1989,
+        "month": 11,
+        "day": 8
+      },
+      "lunar": {
+        "year": 1989,
+        "month": 10,
+        "day": 11
+      }
+    },
+    {
+      "name": "三姨姜昌兰",
+      "type": "阴历",
+      "solar": {
+        "year": 1961,
+        "month": 1,
+        "day": 29
+      },
+      "lunar": {
+        "year": 1960,
+        "month": 12,
+        "day": 13
+      }
+    },
+    {
+      "name": "三姨爹王道松",
+      "type": "阴历",
+      "solar": {
+        "year": 1958,
+        "month": 11,
+        "day": 25
+      },
+      "lunar": {
+        "year": 1958,
+        "month": 10,
+        "day": 15
+      }
+    },
+    {
+      "name": "舅舅姜昌喜",
+      "type": "阴历",
+      "solar": {
+        "year": 1968,
+        "month": 4,
+        "day": 2
+      },
+      "lunar": {
+        "year": 1968,
+        "month": 3,
+        "day": 5
+      }
+    },
+    {
+      "name": "舅妈",
+      "type": "阴历",
+      "solar": {
+        "year": 1969,
+        "month": 9,
+        "day": 29
+      },
+      "lunar": {
+        "year": 1969,
+        "month": 8,
+        "day": 18
+      }
+    },
+    {
+      "name": "姜亮",
+      "type": "阴历",
+      "solar": {
+        "year": 1986,
+        "month": 2,
+        "day": 10
+      },
+      "lunar": {
+        "year": 1986,
+        "month": 1,
+        "day": 2
+      }
+    },
+    {
+      "name": "张灏臻",
+      "type": "阴历",
+      "solar": {
+        "year": 1990,
+        "month": 5,
+        "day": 5
+      },
+      "lunar": {
+        "year": 1990,
+        "month": 4,
+        "day": 11
+      }
+    },
+    {
+      "name": "洋洋姜瑾煜",
+      "type": "阴历",
+      "solar": {
+        "year": 2015,
+        "month": 6,
+        "day": 18
+      },
+      "lunar": {
+        "year": 2015,
+        "month": 6,
+        "day": 18
+      }
+    },
+    {
+      "name": "官金艳",
+      "type": "阴历",
+      "solar": {
+        "year": 1983,
+        "month": 9,
+        "day": 15
+      },
+      "lunar": {
+        "year": 1983,
+        "month": 8,
+        "day": 9
+      }
+    },
+    {
+      "name": "格格",
+      "type": "阴历",
+      "solar": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "lunar": {
+        "year": 2009,
+        "month": 6,
+        "day": 18
+      }
+    },
+    {
+      "name": "恩恩何沐恩",
+      "type": "阴历",
+      "solar": {
+        "year": 2017,
+        "month": 6,
+        "day": 6
+      },
+      "lunar": {
+        "year": 2017,
+        "month": 4,
+        "day": 11
+      }
+    },
+    {
+      "name": "李思思",
+      "type": "阴历",
+      "solar": {
+        "year": 2026,
+        "month": 2,
+        "day": 25
+      },
+      "lunar": {
+        "year": 1989,
+        "month": 1,
+        "day": 9
+      }
+    },
+    {
+      "name": "城城",
+      "type": "阴历",
+      "solar": {
+        "year": 2016,
+        "month": 12,
+        "day": 7
+      },
+      "lunar": {
+        "year": 2016,
+        "month": 12,
+        "day": 7
+      }
+    },
+    {
+      "name": "陈晓宇",
+      "type": "阴历",
+      "solar": {
+        "year": 1987,
+        "month": 7,
+        "day": 21
+      },
+      "lunar": {
+        "year": 1987,
+        "month": 7,
+        "day": 21
+      }
+    },
+    {
+      "name": "卡卡饶允初",
+      "type": "阴历",
+      "solar": null,
+      "lunar": null
+    }
+  ]
+}

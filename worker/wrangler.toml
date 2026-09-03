@@ -1,0 +1,24 @@
+name = "birthday-notice"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# 普通变量（非机密），可提交到仓库
+[vars]
+# Bark 推送服务地址（结尾不要带斜杠）
+BARK_BASE = "https://api.day.app/"
+
+# 定时触发：每天 00:00（中国时间）= 16:00 UTC
+# Cloudflare Cron 以 UTC 为准，中国比 UTC 快 8 小时
+[triggers]
+crons = ["0 16 * * *"]
+
+# ===== 数据放在 KV：改数据不用重新部署 =====
+# 上传/更新数据: npx wrangler kv key put --binding=BIRTHDAY birthday.json "$(cat src/birthday.json)"
+# （重新生成 json 用: python xlsx_to_json.py）
+[[kv_namespaces]]
+binding = "BIRTHDAY"
+id = "1f9549afd54d414cbdeb81773b5cc31d"
+
+# BARK_KEY 属于密钥，请用 secret 设置（不要写进本文件）:
+#   npx wrangler secret put BARK_KEY
+# 然后访问 https://api.day.app/<BARK_KEY>/标题/内容

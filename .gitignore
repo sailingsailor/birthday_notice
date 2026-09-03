@@ -1,0 +1,20 @@
+# 本地原始数据，绝不提交（含私人信息）
+birthday.xlsx
+
+# 依赖
+worker/node_modules/
+
+# Wrangler 构建/缓存产物
+dist/
+.wrangler/
+
+# 本地密钥/变量文件
+.dev.vars
+worker/.dev.vars
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 工作区内部记忆/缓存
+.workbuddy/

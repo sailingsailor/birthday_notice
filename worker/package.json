@@ -1,0 +1,19 @@
+{
+  "name": "birthday-notice-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Birthday notice worker (Cloudflare Workers) - parses JSON, pushes Bark notifications",
+  "main": "src/index.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "lunar-javascript": "^1.6.19"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}
