@@ -1,10 +1,11 @@
 ﻿<#
 .SYNOPSIS
-  一键更新生日日历到 Cloudflare：生成 json -> 推 KV -> 删旧日历。
+  一键更新生日日历到 Cloudflare：生成 json -> 推 KV(json + 预生成 ics)。
 .DESCRIPTION
   1) 可选：运行 xlsx_to_json.py 把 birthday.xlsx 转成 birthday.json
   2) 把 birthday.json 推到 KV（命名空间 BIRTHDAY）
-  3) 删除旧 calendar.ics，使下次订阅拉取自动重建（或等次日 00:00 定时重建）
+  3) 本地用与 Worker 完全相同的逻辑预生成 calendar.ics，并直接推到 KV
+     ——线上订阅拉取时立即返回最新日历，不再依赖“删旧日历后等拉取自动重建”的兜底链路。
   凭据从 Windows 环境变量读取 CLOUDFLARE_API_TOKEN（可选 CLOUDFLARE_ACCOUNT_ID）。
 .PARAMETER SkipJson
   跳过 xlsx->json 步骤（用于你已经直接改好 birthday.json 的情况，避免被 xlsx 覆盖回去）。
@@ -60,16 +61,21 @@ if (-not $SkipJson) {
   Write-Host "==> 跳过 xlsx->json（使用现有 birthday.json）" -ForegroundColor Cyan
 }
 
-# ---------- 2) + 3) 推 KV 并删旧日历（在 worker 目录执行，--path 相对 worker/） ----------
+# ---------- 2) 上传 birthday.json 到 KV（在 worker 目录执行，--path 相对 worker/） ----------
 Push-Location $scriptDir
 try {
   Write-Host "==> 上传 birthday.json 到 KV (BIRTHDAY)" -ForegroundColor Cyan
   & node $wrangler kv key put birthday.json --binding=BIRTHDAY --path ./src/birthday.json
   if ($LASTEXITCODE -ne 0) { Write-Error "上传 birthday.json 失败"; exit 1 }
 
-  Write-Host "==> 删除旧 calendar.ics（下次订阅拉取自动重建，或次日 00:00 定时重建）" -ForegroundColor Cyan
-  & node $wrangler kv key delete calendar.ics --binding=BIRTHDAY
-  if ($LASTEXITCODE -ne 0) { Write-Warning "删除 calendar.ics 失败（可能本就不存在，可忽略）" }
+  # ---------- 3) 本地预生成 calendar.ics 并直接推到 KV（线上订阅立即生效，不再依赖删旧日历后自动重建） ----------
+  Write-Host "==> 本地预生成 calendar.ics (与 Worker 同款逻辑)" -ForegroundColor Cyan
+  & node (Join-Path $scriptDir "gen_ics.mjs")
+  if ($LASTEXITCODE -ne 0) { Write-Error "生成 calendar.ics 失败"; exit 1 }
+
+  Write-Host "==> 上传 calendar.ics 到 KV (BIRTHDAY)" -ForegroundColor Cyan
+  & node $wrangler kv key put calendar.ics --binding=BIRTHDAY --path ./src/calendar.ics
+  if ($LASTEXITCODE -ne 0) { Write-Error "上传 calendar.ics 失败"; exit 1 }
 } finally {
   Pop-Location
 }
