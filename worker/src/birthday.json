@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-03",
+  "updatedAt": "2026-09-13",
   "source": "birthday.xlsx",
   "people": [
     {
@@ -181,7 +181,7 @@
       "lunar": {
         "year": 1985,
         "month": 7,
-        "day": 30
+        "day": 29
       }
     },
     {
@@ -405,7 +405,7 @@
       }
     },
     {
-      "name": "城城陈依城",
+      "name": "城城陈亿城",
       "type": "阴历",
       "solar": {
         "year": 2016,
