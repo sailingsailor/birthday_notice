@@ -6,14 +6,19 @@ Worker 每天定时检查阳历/阴历生日，提前 0~3 天通过 Bark 推送�
 ## 目录结构
 ```
 birthday_notice/
-├─ birthday.xlsx            # 本地数据源（不上传）
-├─ xlsx_to_json.py          # 本地：xlsx -> json
+├─ birthday.xlsx               # 本地数据源（私有，.gitignore + skip-worktree，不上传）
+├─ xlsx_to_json.py             # 本地：xlsx -> json
+├─ .github/workflows/deploy.yml # push 自动部署（见 Section 7）
 └─ worker/
-   ├─ wrangler.toml         # Worker 配置 + cron
-   ├─ package.json
+   ├─ wrangler.toml            # Worker 配置 + KV 绑定 + cron
+   ├─ package.json             # 依赖（wrangler 4.x）
+   ├─ update.ps1               # 一键：xlsx->json + 推【远程】KV（见 Section 1）
+   ├─ gen_ics.mjs              # 本地预览：离线生成 calendar.ics（不参与线上）
+   ├─ DEPLOY.md                # 本文档
    └─ src/
-      ├─ index.js           # Worker 主程序（只解析 json）
-      └─ birthday.json      # 由 xlsx_to_json.py 生成
+      ├─ index.js              # Worker 主程序（fetch 每次按 KV 现算；cron 兜底缓存）
+      ├─ calendar_core.mjs     # 共享日历计算逻辑（Worker 与本地脚本共用，避免两边不一致）
+      └─ birthday.json         # 由 xlsx_to_json.py 生成（推送到 KV 的源文件）
 ```
 
 ## 1. 本地更新数据（改 xlsx 后）
@@ -95,20 +100,46 @@ wrangler dev        # 本地起服务，访问 http://127.0.0.1:8787 触发检�
 ## 7. 自动部署（GitHub Actions）
 仓库已包含 `.github/workflows/deploy.yml`：push 到 `main` 且 `worker/**` 或 workflow 自身变动时，自动 `npm ci` + `npx wrangler deploy`（在 `worker/` 目录内执行）。
 
-### 首次只需做一次：配置仓库 Secrets
-仓库页面 → **Settings → Secrets and variables → Actions → New repository secret**，添加：
-- **`CLOUDFLARE_API_TOKEN`**：Cloudflare API Token（权限需 `Workers Scripts(Edit)` + `Workers KV Storage(Edit)`）。
-  取你本地已有的同一个 token：Cloudflare 后台 `My Profile → API Tokens`；或本机 Windows 环境变量 `CLOUDFLARE_API_TOKEN` 的值。
-- **`CLOUDFLARE_ACCOUNT_ID`**（可选但建议）：账号 ID `6b26e121057fd094c5e176f5070b2338`。当 token 无 memberships 权限时必须提供，否则 deploy 报 `/memberships` 错误。
+### 首次只需做一次：添加仓库 Secret `CLOUDFLARE_API_TOKEN`（**必做，否则自动部署一定失败**）
 
-### 之后
-- 改 `worker/` 代码 → push 到 `main` → 自动部署，几秒到一两分钟完成。
-- 也可在 **Actions** 页面手动 **Run workflow** 立即触发（workflow 已开启 `workflow_dispatch`）。
+> 这是最容易被漏掉的一步。`deploy.yml` 的部署步骤读取 `secrets.CLOUDFLARE_API_TOKEN`；仓库里没有这个 Secret 时，workflow 跑到部署那步必然报错退出（Actions 页显示 ❌ 红叉），**自动部署不会发生**。
+
+**① 打开添加页面**（直接在浏览器地址栏输入，`:owner/:repo` 换成你的仓库）：
+```
+https://github.com/sailingsailor/birthday_notice/settings/secrets/actions
+```
+入口也可从 UI 点进去：仓库 → **Settings** → 左侧 **Secrets and variables** → **Actions** → **New repository secret**。
+
+**② 取出 token 值**（本机已有，直接复用，不必重新创建）。在 PowerShell 里打印当前环境变量并复制：
+```powershell
+$env:CLOUDFLARE_API_TOKEN     # 显示空 → 说明是本次会话之前才 setx 的，重开一个 PowerShell 窗口再试即可读到
+```
+若本机也没有，就去 Cloudflare 后台重新建一个：`My Profile → API Tokens → Create Token → Create Custom Token`，权限见 **Section 8**（`Workers Scripts(Edit)` + `Workers KV Storage(Edit)`）。创建后立即复制，页面关闭后不可再见。
+
+**③ 填写**：
+| 字段 | 值 |
+|---|---|
+| **Name** | `CLOUDFLARE_API_TOKEN` （必须一字不差） |
+| **Secret** | 粘贴上一步的 token（`cf` 开头的一长串） |
+
+点 **Add secret** 保存。保存后页面只显示名称与更新时间，**看不到值**——看不到明文是正常的，说明存好了。
+
+**④ `CLOUDFLARE_ACCOUNT_ID` 无需配置**：已硬编码在 `deploy.yml` 里（`6b26e121057fd094c5e176f5070b2338`）。仅在你想改成变量传入时才需要另加一个 Secret。
+
+### 之后：验证自动部署是否真的在跑
+1. 进入仓库 **Actions** 标签（`https://github.com/sailingsailor/birthday_notice/actions`）。
+2. 也可在 workflow 页点 **Run workflow** 手动触发一次（workflow 已开启 `workflow_dispatch`），不必等下次 push。
+3. 看最近一次 run 的颜色与时长：
+   - ✅ **绿色 + 出现 `Published` 之类的部署日志** → 自动部署已生效。
+   - ❌ **红色** → 点进去看失败步骤：若是 `wrangler deploy` 报认证错误（401 / Authentication error / memberships），就是本 Secret 没配或值不对，回到上面①重配，然后重跑。
+4. 正常路径：改 `worker/` 代码 → `git push` → 一两分钟内自动部署完成。**数据更新不需要它**（数据走 `update.ps1` → KV，不触发部署）。
 
 ### 注意
-- 首次 push 时 secret 尚未配置，workflow 会失败；配好 secret 后重跑（或下次 push）即成功。
-- Worker 上的密钥 `BARK_KEY`、`CAL_TOKEN` 已通过 `wrangler secret put` 存于 Cloudflare，**自动部署只更新代码，不会清除这些 secret**。
-- 数据更新走 `update.ps1` → KV，不触发部署；只有 `worker/` 代码改动才触发部署。
+- **Actions 红叉 ≠ 线上坏了**。本 Secret 只影响「push 后自动部署」这条链路。如果你一直是本地手动 `wrangler deploy` + `update.ps1` 更新，那么即使 Actions 全是红的，线上 Worker 与 KV 数据也完全正常——红叉只代表"自动部署没发生"。想让 Actions 页面干净，才需要补这个 Secret。
+- 一时不想配也可选择临时关掉 workflow：仓库 **Actions** → 选 `deploy` workflow → 右上 `...` → **Disable workflow**。之后想用再 Enable。
+- 首次 push 时 Secret 尚未配置，workflow 失败是预期现象；配好 Secret 后 **Re-run jobs**（或下次 push）即成功。
+- Worker 自身的密钥 `BARK_KEY`、`CAL_TOKEN` 是通过 `wrangler secret put` 存在 Cloudflare 上的，与 GitHub Secret 无关；**自动部署只更新代码，不会清除这些 Cloudflare 侧 secret**。
+- 本机 Windows 环境变量 与 GitHub 仓库 Secret 是**两份独立存储**，值可以相同。只配本机 → 本地命令能跑、Actions 仍红；只配仓库 → Actions 能跑、本地 `update.ps1` 会缺凭据。
 
 ## 8. Cloudflare API Token（权限与存储位置）
 
