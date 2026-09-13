@@ -20,15 +20,33 @@ jobs:
         working-directory: worker
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm ci
+
+      # 预检：Secret 未配置时直接给出可读错误，避免只看到 "exit code 1" 无从下手
+      - name: Check CLOUDFLARE_API_TOKEN
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error title=缺少仓库 Secret CLOUDFLARE_API_TOKEN::未读到 secrets.CLOUDFLARE_API_TOKEN。请到仓库 Settings → Secrets and variables → Actions → New repository secret，新建名为 CLOUDFLARE_API_TOKEN 的 Secret（权限需 Workers Scripts(Edit) + Workers KV Storage(Edit)）。详细步骤见 worker/DEPLOY.md 第 7 节。"
+            exit 1
+          fi
+          echo "已读到 CLOUDFLARE_API_TOKEN（长度 ${#CLOUDFLARE_API_TOKEN}）"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      # 预检：把凭据对应的账号/权限写进日志，token 失效或权限不足时一眼可见
+      - name: Verify credentials
+        run: npx wrangler whoami
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: "6b26e121057fd094c5e176f5070b2338"
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy

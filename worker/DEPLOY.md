@@ -131,8 +131,22 @@ $env:CLOUDFLARE_API_TOKEN     # 显示空 → 说明是本次会话之前才 set
 2. 也可在 workflow 页点 **Run workflow** 手动触发一次（workflow 已开启 `workflow_dispatch`），不必等下次 push。
 3. 看最近一次 run 的颜色与时长：
    - ✅ **绿色 + 出现 `Published` 之类的部署日志** → 自动部署已生效。
-   - ❌ **红色** → 点进去看失败步骤：若是 `wrangler deploy` 报认证错误（401 / Authentication error / memberships），就是本 Secret 没配或值不对，回到上面①重配，然后重跑。
+   - ❌ **红色** → 点进去看失败步骤，对照下面的「常见故障对照」。
 4. 正常路径：改 `worker/` 代码 → `git push` → 一两分钟内自动部署完成。**数据更新不需要它**（数据走 `update.ps1` → KV，不触发部署）。
+
+### 常见故障对照（Actions 报错 → 原因 → 处理）
+
+workflow 里有两步**预检**（`Check CLOUDFLARE_API_TOKEN`、`Verify credentials`），专门用来把失败原因写进日志，避免只看到一句 `exit code 1` 无从下手。
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| `Deploy to Cloudflare Workers` **1~2 秒即挂** + `Process completed with exit code 1`，日志无其它线索 | 仓库 Secret `CLOUDFLARE_API_TOKEN` **没配** → 环境变量为空，wrangler 立即认证失败（真部署要 3~10 秒） | 按上文 ①~④ 添加 Secret，再 **Re-run jobs** |
+| 日志出现 `已读到 CLOUDFLARE_API_TOKEN（长度 0）` | 同上（值为空串） | 同上 |
+| `Check CLOUDFLARE_API_TOKEN` 步报 **缺少仓库 Secret CLOUDFLARE_API_TOKEN** | 同上（这是我们自己抛的明确提示） | 同上 |
+| `Verify credentials` / 部署步报 `401` / `Authentication error` / `Invalid API Token` | Secret **值不对**：过期、复制不全、或权限不足 | 去 Cloudflare 重新生成 token（权限见 Section 8），更新仓库 Secret |
+| 报 `/memberships` 相关错误 | token 无 `Account Settings: Read` 权限 | 正常不会触发（`deploy.yml` 已硬编码 `CLOUDFLARE_ACCOUNT_ID`）；若报，检查该行是否被删改 |
+| `Install dependencies` (`npm ci`) 失败 | `package-lock.json` 与 `package.json` 不一致 | 本地 `cd worker && npm install` 后提交 lockfile |
+| 注释警告 `Node.js 20 is deprecated … actions/checkout@v4, actions/setup-node@v4` | v4 版 action 以 Node 20 为运行时，已被 GitHub 弃用（强制跑在 Node 24） | **已修**：workflow 用 `actions/checkout@v5` / `actions/setup-node@v5`（Node 24 运行时）+ `node-version: 22`。此警告不影响功能，仅提示 |
 
 ### 注意
 - **Actions 红叉 ≠ 线上坏了**。本 Secret 只影响「push 后自动部署」这条链路。如果你一直是本地手动 `wrangler deploy` + `update.ps1` 更新，那么即使 Actions 全是红的，线上 Worker 与 KV 数据也完全正常——红叉只代表"自动部署没发生"。想让 Actions 页面干净，才需要补这个 Secret。
