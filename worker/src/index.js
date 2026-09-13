@@ -126,7 +126,9 @@ export default {
     })());
   },
   // HTTP 入口：日历订阅（?token=xxx）。token 校验失败一律返回 404。
-  // 直接返回 KV 中已生成的 calendar.ics，不再实时计算。
+  // 每次拉取都按 KV 中“当前”的 birthday.json 现算并直接返回，
+  // 不再依赖 KV 里那份可能陈旧的 calendar.ics（消除“改了数据却没刷新”的失效模式）。
+  // 未配置 KV 绑定时退回打包内置数据。
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const token = url.searchParams.get("token");
@@ -136,13 +138,12 @@ export default {
         headers: { "Content-Type": "text/plain; charset=utf-8" },
       });
     }
-    let ics = null;
-    if (env.BIRTHDAY) ics = await env.BIRTHDAY.get("calendar.ics");
-    if (!ics) ics = await generateCalendar(env); // 兜底：KV 尚无则现算并存储
+    const data = await loadData(env);
+    const ics = buildWindowICS(data, chinaNow(), CAL_WINDOW);
     return new Response(ics, {
       headers: {
         "Content-Type": "text/calendar; charset=utf-8",
-        "Cache-Control": "public, max-age=300",
+        "Cache-Control": "public, max-age=60",
       },
     });
   },
