@@ -64,10 +64,12 @@ if (-not $SkipJson) {
 # ---------- 2) 上传 birthday.json 到 KV（在 worker 目录执行，--path 相对 worker/） ----------
 # 说明：Worker 的 fetch 每次拉取都按 KV 中“当前”的 birthday.json 现算并返回，
 # 因此只需把最新的 birthday.json 推上去即可，无需再单独处理 calendar.ics。
+# ⚠️ wrangler 4 起 `kv` 命令默认目标是【本地】KV，必须显式加 --remote 才写线上远程 KV，
+#    否则部署的 Worker 读不到（只读本地），会退回打包内置旧数据。
 Push-Location $scriptDir
 try {
-  Write-Host "==> 上传 birthday.json 到 KV (BIRTHDAY)" -ForegroundColor Cyan
-  & node $wrangler kv key put birthday.json --binding=BIRTHDAY --path ./src/birthday.json
+  Write-Host "==> 上传 birthday.json 到远程 KV (BIRTHDAY --remote)" -ForegroundColor Cyan
+  & node $wrangler kv key put birthday.json --binding=BIRTHDAY --remote --path ./src/birthday.json
   if ($LASTEXITCODE -ne 0) { Write-Error "上传 birthday.json 失败"; exit 1 }
 } finally {
   Pop-Location

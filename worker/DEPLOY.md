@@ -20,11 +20,11 @@ birthday_notice/
 数据已放在 Cloudflare KV（命名空间 `BIRTHDAY`），Worker 运行时解析 KV 中的 json，**改数据无需重新部署**：
 
 ### 一键脚本（推荐，Windows）
-`worker/update.ps1` 把「生成 json → 推 KV → 删旧日历」合成一步，并从 Windows 环境变量读取 `CLOUDFLARE_API_TOKEN`（可选 `CLOUDFLARE_ACCOUNT_ID`）。
+`worker/update.ps1` 把「生成 json → 推 KV」合成一步，并从 Windows 环境变量读取 `CLOUDFLARE_API_TOKEN`（可选 `CLOUDFLARE_ACCOUNT_ID`）。Worker 的 `fetch` 每次拉取都按 KV 当前 `birthday.json` 现算，因此**只推 `birthday.json` 即可**，无需再处理 `calendar.ics`。
 ```powershell
 cd worker
-.\update.ps1            # 完整：xlsx->json + 推 KV + 删旧日历
-.\update.ps1 -SkipJson  # 只推 KV + 删旧日历（已直接改好 birthday.json 时，避免被 xlsx 覆盖）
+.\update.ps1            # 完整：xlsx->json + 推 KV(birthday.json)
+.\update.ps1 -SkipJson  # 只推 KV（已直接改好 birthday.json 时，避免被 xlsx 覆盖回去）
 # 若 PowerShell 禁止脚本：
 powershell -ExecutionPolicy Bypass -File .\update.ps1
 ```
@@ -33,9 +33,10 @@ powershell -ExecutionPolicy Bypass -File .\update.ps1
 ### 手工分步（任意系统）
 ```bash
 python xlsx_to_json.py                                # 重新生成 src/birthday.json
-wrangler kv key put --binding=BIRTHDAY birthday.json --path ./src/birthday.json   # 推送到 KV，立即生效
-wrangler kv key delete calendar.ics --binding=BIRTHDAY   # 删旧日历，下次拉取/次日00:00自动重建
+# ⚠️ wrangler 4 起 kv 命令默认目标是【本地】KV，必须加 --remote 才写线上远程 KV，否则部署的 Worker 读不到
+wrangler kv key put --binding=BIRTHDAY --remote birthday.json --path ./src/birthday.json   # 推送到远程 KV，立即生效（fetch 每次现算，无需删 calendar.ics）
 ```
+> 自检是否真写到了远程：`wrangler kv key get birthday.json --binding=BIRTHDAY --remote | findstr 王创`（应能看到对应记录；不带 --remote 读的是本地，与线上无关）。
 > 若未启用 KV（注释掉 wrangler.toml 里的 [[kv_namespaces]]），则改为 `wrangler deploy` 重新发布（数据随包内置）。
 
 ## 2. 安装依赖 & 部署
@@ -62,14 +63,14 @@ wrangler deploy
 - 通知文案与原脚本一致：当天 `「张三今天过44岁生日,阴历...」`，非当天 `「张三2026-09-22(3天后)过44岁生日,阴历...」`。
 
 ## 5. 日历订阅（ICS，滚动窗口 + 预生成）
-Worker 提供 iCalendar 订阅源，可添加到手机/电脑日历 App。设计为「**每日预生成 + 拉取直接读文件**」，拉取时不再实时运算。
+Worker 提供 iCalendar 订阅源，可添加到手机/电脑日历 App。设计为「**每次拉取都按 KV 当前数据现算**」，不依赖可能陈旧的预生成文件。
 
 - **订阅地址**：`https://<子域>.workers.dev/?token=<CAL_TOKEN>`
   - 例：`https://birthday-notice.sailing-sailor.workers.dev/?token=8a7f127dd388c070ea61a830`
 - **token 校验**：`token` 缺失或错误一律返回 **404**；只有与 `CAL_TOKEN` 一致才返回 `text/calendar`。
 - **工作原理**：
-  1. 每天定时（cron = 中国 00:00）执行 `scheduled`：把「前后 60 天」的生日日历预先算好，写入 KV 的 `calendar.ics`（含 metadata：生成时间 / 中国日期 / 窗口天数）。
-  2. 客户端拉取订阅地址时，`fetch` 直接读取 KV 里的 `calendar.ics` 返回，**不再计算**；仅当 KV 里还没有该文件时才兜底现算一次并写回（保证首次可用）。
+  1. 每天定时（cron = 中国 00:00）执行 `scheduled`：用 KV 中当前 `birthday.json` 重新生成「前后 60 天」日历，写入 KV 的 `calendar.ics`（含 metadata：生成时间 / 中国日期 / 窗口天数）作为兜底缓存。
+  2. 客户端拉取订阅地址时，`fetch` **每次都按 KV 中“当前”的 `birthday.json` 现算并返回**（`Cache-Control: max-age=60`），不再信任那份 `calendar.ics` 缓存文件——改了数据后只要 KV 里的 `birthday.json` 是最新的，订阅下次刷新（≤60s）即见，避免“改了数据却没刷新”的失效模式。
 - **内容（滚动 ±60 天窗口，共 121 天）**：
   - 阳历生日：取当前年/前一年/后一年的具体月日，落在窗口内的生成单条 `VEVENT`（无 RRULE 重复，因为窗口每天滚动刷新）。
   - 阴历生日：用 `lunar-javascript` 把农历 月/日 转阳历（对照原 `zhdate`）；该农历月没有这一天（如七月只有29天却写30日）按年跳过，与原 py 严格一致。同样只保留落在窗口内的年份。
@@ -77,7 +78,8 @@ Worker 提供 iCalendar 订阅源，可添加到手机/电脑日历 App。设计
   - 每个 `VEVENT` 带 `SUMMARY`（姓名 + 生日 + 年龄）和 `DESCRIPTION`（阳历/农历原始日期 + 备注）。
 - **窗口可调**：改 `src/index.js` 顶部 `CAL_WINDOW`（默认 60）即可改前后天数。
 - **数据来源**：生日数据读 KV（`BIRTHDAY` 里的 `birthday.json`）；日历文件存同一命名空间的 `calendar.ics`。
-- 改 xlsx 后：`python xlsx_to_json.py` → `wrangler kv key put --binding=BIRTHDAY birthday.json "$(cat src/birthday.json)"`，**次日 00:00 自动重新生成日历**生效。若想立刻生效，也可手动 `wrangler kv key put --binding=BIRTHDAY calendar.ics "$(本地生成的ics)"` 或等待首次拉取兜底生成。
+- 改 xlsx 后：`python xlsx_to_json.py` → `wrangler kv key put --binding=BIRTHDAY --remote birthday.json "$(cat src/birthday.json)"`，**次日 00:00 自动重新生成日历**生效。若想立刻生效，也可手动 `wrangler kv key put --binding=BIRTHDAY --remote calendar.ics "$(本地生成的ics)"` 或等待首次拉取兜底生成。
+  - ⚠️ **wrangler 4 必加 `--remote`**：kv 命令默认写「本地」KV，不加则部署的 Worker（读远程）拿不到，会退回打包内置旧数据。
 - ⚠️ Bark 每日提前推送目前仍保留（`scheduled` 里 `checkBirthdays` 调用）；若只想保留日历，删掉该调用即可。
 
 ## 6. 本地调试（不部署）
@@ -102,3 +104,30 @@ wrangler dev        # 本地起服务，访问 http://127.0.0.1:8787 触发检�
 - 首次 push 时 secret 尚未配置，workflow 会失败；配好 secret 后重跑（或下次 push）即成功。
 - Worker 上的密钥 `BARK_KEY`、`CAL_TOKEN` 已通过 `wrangler secret put` 存于 Cloudflare，**自动部署只更新代码，不会清除这些 secret**。
 - 数据更新走 `update.ps1` → KV，不触发部署；只有 `worker/` 代码改动才触发部署。
+
+## 8. Cloudflare API Token（权限与存储位置）
+
+`update.ps1` / `wrangler deploy` 从 **Windows 环境变量**读取 `CLOUDFLARE_API_TOKEN`，绝不写进代码或仓库。
+
+### 创建 Token（Cloudflare 后台）
+- 入口：`My Profile → API Tokens → Create Token → Create Custom Token`
+- 账号范围：选你自己的账号（`6b26e121057fd094c5e176f5070b2338`）
+- **权限**（Account 级别，最小集）：
+
+  | 权限 | 操作 | 用途 |
+  |---|---|---|
+  | Cloudflare Workers Scripts | Edit | `wrangler deploy` 部署 Worker |
+  | Workers KV Storage | Edit | `wrangler kv key put` 推 `birthday.json` |
+
+- （可选）再加 **Account Settings → Read**：避免 wrangler 在无 `CLOUDFLARE_ACCOUNT_ID` 时调 `/memberships` 报错。更省事是直接把账号 ID 也设成环境变量（见下）。
+- TTL：建议设长（1 年或不过期）；创建后**立即复制**，页面关闭不可再见。
+
+### 存储位置（两处，互相独立）
+1. **本机 Windows 环境变量**（给 `update.ps1` / 本地 `wrangler deploy`）：
+   ```powershell
+   setx CLOUDFLARE_API_TOKEN "你的token值"                                    # 用户环境变量，重开终端生效
+   setx CLOUDFLARE_ACCOUNT_ID "6b26e121057fd094c5e176f5070b2338"             # 建议一并设置，跳过 /memberships 查询
+   # 图形界面：设置 → 系统 → 关于 → 高级系统设置 → 环境变量 → 用户变量 → 新建
+   # 仅本次终端临时用： $env:CLOUDFLARE_API_TOKEN = "你的token值"
+   ```
+2. **GitHub 仓库 Secret**（给 Actions 自动部署）：仓库 `Settings → Secrets and variables → Actions → New repository secret`，Name=`CLOUDFLARE_API_TOKEN`，值同上；`CLOUDFLARE_ACCOUNT_ID` 已硬编码在 `deploy.yml`，无需再配。
