@@ -36,7 +36,12 @@ python xlsx_to_json.py                                # 重新生成 src/birthda
 # ⚠️ wrangler 4 起 kv 命令默认目标是【本地】KV，必须加 --remote 才写线上远程 KV，否则部署的 Worker 读不到
 wrangler kv key put --binding=BIRTHDAY --remote birthday.json --path ./src/birthday.json   # 推送到远程 KV，立即生效（fetch 每次现算，无需删 calendar.ics）
 ```
-> 自检是否真写到了远程：`wrangler kv key get birthday.json --binding=BIRTHDAY --remote | findstr 王创`（应能看到对应记录；不带 --remote 读的是本地，与线上无关）。
+> **自检是否真写到了远程**——⚠️ PowerShell 5.1 中文 locale 下，`Select-String`/`findstr` 对 UTF-8 管道输出常因被当成 GBK 解码而乱码、导致 `王创` 漏匹配（**空 ≠ KV 没数据**）。最可靠的坐实法是把远程 KV 落盘、按字节查，绕过管道编码：
+> ```powershell
+> node node_modules\wrangler\bin\wrangler.js kv key get birthday.json --binding=BIRTHDAY --remote > C:\Users\zou\kv_check.json
+> # 然后用 notepad 打开 kv_check.json 搜“王创”，或让 WorkBuddy 直接 Read 该文件确认
+> ```
+> （不带 `--remote` 读的是本地 KV，与线上 Worker 无关，不要用来判断线上数据。）
 > 若未启用 KV（注释掉 wrangler.toml 里的 [[kv_namespaces]]），则改为 `wrangler deploy` 重新发布（数据随包内置）。
 
 ## 2. 安装依赖 & 部署
